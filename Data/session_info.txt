@@ -1,0 +1,28 @@
+R version 3.4.1 (2017-06-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: OS X El Capitan 10.11.6
+
+Matrix products: default
+BLAS: /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_GB.UTF-8/en_GB.UTF-8/en_GB.UTF-8/C/en_GB.UTF-8/en_GB.UTF-8
+
+attached base packages:
+[1] stats4    parallel  stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] TxDb.Hsapiens.UCSC.hg38.knownGene_3.4.0 GenomicFeatures_1.28.4                  AnnotationDbi_1.38.2                   
+ [4] GenomicAlignments_1.12.1                Rsamtools_1.28.0                        Biostrings_2.44.2                      
+ [7] XVector_0.16.0                          SummarizedExperiment_1.6.3              DelayedArray_0.2.7                     
+[10] matrixStats_0.52.2                      Biobase_2.36.2                          GenomicRanges_1.28.4                   
+[13] GenomeInfoDb_1.12.2                     IRanges_2.10.2                          S4Vectors_0.14.3                       
+[16] BiocGenerics_0.22.0                    
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.12            compiler_3.4.1          bitops_1.0-6            tools_3.4.1             zlibbioc_1.22.0        
+ [6] biomaRt_2.32.1          digest_0.6.12           bit_1.1-12              RSQLite_2.0             memoise_1.1.0          
+[11] tibble_1.3.3            lattice_0.20-35         pkgconfig_2.0.1         rlang_0.1.1             Matrix_1.2-10          
+[16] DBI_0.7                 GenomeInfoDbData_0.99.0 rtracklayer_1.36.4      bit64_0.9-7             grid_3.4.1             
+[21] XML_3.98-1.9            BiocParallel_1.10.1     blob_1.1.0              RCurl_1.95-4.8         

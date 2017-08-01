@@ -1,0 +1,33 @@
+Overnight, all files:
+> SE <- summarizeOverlaps(gene_model, bam_files)
+Error in names(res) <- nms : 
+  'names' attribute [41] must be the same length as the vector [21]
+In addition: Warning message:
+stop worker failed:
+  'clear_cluster' receive data failed:
+  reached elapsed time limit 
+
+Only SRR5224080:
+> SE <- summarizeOverlaps(gene_model, bam_files)
+Error in extractROWS(x, i) : 
+  Problem(s) found when testing validity of SortedByQueryHits object returned by subsetting operation: 'queryHits(x)'
+  must be sorted. Make sure to use a subscript that results in a valid SortedByQueryHits object.
+In addition: Warning messages:
+1: In GenomicRanges:::valid.GenomicRanges.seqinfo(x) :
+  GAlignments object contains 1024 out-of-bound ranges located on sequence chr20. Note that only ranges located on a
+  non-circular sequence whose length is not NA can be considered out-of-bound (use seqlengths() and isCircular() to get
+  the lengths and circularity flags of the underlying sequences).
+2: In valid.GenomicRanges.seqinfo(x, suggest.trim = TRUE) :
+  GRanges object contains 1024 out-of-bound ranges located on sequence chr20. Note that only ranges located on a
+  non-circular sequence whose length is not NA can be considered out-of-bound (use seqlengths() and isCircular() to get
+  the lengths and circularity flags of the underlying sequences). You can use trim() to trim these ranges. See
+  ?`trim,GenomicRanges-method` for more information.
+
+SRR5224080 + SRR5224081:
+> SE <- summarizeOverlaps(gene_model, bam_files)
+Error in names(res) <- nms : 
+  'names' attribute [2] must be the same length as the vector [1]
+In addition: Warning message:
+stop worker failed:
+  'clear_cluster' receive data failed:
+  reached elapsed time limit 

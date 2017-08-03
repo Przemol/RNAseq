@@ -7,7 +7,6 @@ require(TxDb.Hsapiens.UCSC.hg38.knownGene, lib.loc = "/home/md1nbu/R/x86_64-pc-l
 gene_model <- exonsBy(keepStandardChromosomes(TxDb.Hsapiens.UCSC.hg38.knownGene), 'gene')
 seqinfo(gene_model)
 
-setwd('/mnt/fastdata/md1nbu/PRJNA369618/fastq')
 bam_files <- BamFileList(dir(pattern = 'bam$'))
 seqinfo(bam_files)
 

@@ -12,12 +12,14 @@ colnames(SE) <- gsub('(SRR[0-9]+)\\.bam', '\\1', colnames(SE))
 raw_counts <- assay(SE)
 dds <- DESeqDataSet(SE, ~1)
 rpkm <- fpkm(dds, robust = TRUE)
+base_mean <- rowMeans(rpkm)
 rpkm_flt <- rpkm[base_mean>1,]
 
 
 # Correalte
 cor_mat <- cor(t(rpkm_flt))
-asave(rpkm_flt, file='cor_mat_rpkm_1.Rdata')
+save(cor_mat, file='cor_mat_rpkm_1.Rdata')
+system('rsync -av --progress cor_mat_rpkm_1.Rdata ps562@cb-head2.gurdon.private.cam.ac.uk:~/tests/')
 
 
 # Asses significnace

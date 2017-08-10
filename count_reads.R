@@ -15,6 +15,8 @@ seqinfo(bam_files)
 SE <- summarizeOverlaps(gene_model, bam_files)
 str(assay(SE))
 
+save(SE, file='SE.Rdata')
+
 
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 gene_smbl <- mapIds(org.Hs.eg.db, rownames(SE), "SYMBOL", "ENTREZID")

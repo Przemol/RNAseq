@@ -17,6 +17,7 @@ raw_counts <- assay(SE)
 raw_counts <- raw_counts[!zeros, ] 
 raw_counts_cad <- raw_counts["999",]
 cor_mat <- cor(t(raw_counts),raw_counts_cad)
+anticor_mat <- cor(t(raw_counts),1/raw_counts_cad)
 
 cor_mat_no_diag <- cor_mat
 diag(cor_mat_no_diag) <- 0
@@ -27,7 +28,7 @@ idx <- which(c1, arr.ind = TRUE)[1,]
 # Asses significnace
 library(psych)
 cor_pvl <- corr.p(cor_mat , nrow(cor_mat), adjust="fdr", alpha=.05)
-
+anticor_pvl <- corr.p(anticor_mat , nrow(anticor_mat), adjust="fdr", alpha=.05)
 
 ### translate ENTREZID to gene names
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)

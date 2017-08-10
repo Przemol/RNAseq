@@ -10,6 +10,21 @@ colnames(SE) <- gsub('(SRR[0-9]+)\\.bam', '\\1', colnames(SE))
 
 # Extract count matrix
 raw_counts <- assay(SE)
+dds <- DESeqDataSet(SE, ~1)
+rpkm <- fpkm(dds, robust = TRUE)
+rpkm_flt <- rpkm[base_mean>1,]
+
+
+# Correalte
+cor_mat <- cor(t(rpkm_flt))
+asave(rpkm_flt, file='cor_mat_rpkm_1.Rdata')
+
+
+# Asses significnace
+library(psych)
+cor_pvl <- corr.p(cor_mat , nrow(cor_mat), adjust="fdr", alpha=.05)
+
+base_mean <- rowMeans(rpkm)
 
 # Correalte
 raw_counts <- raw_counts[!zeros, ] 

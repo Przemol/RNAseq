@@ -54,8 +54,10 @@ load('cor_mat_rpkm_1.Rdata')
 
 > cor_pvl <- corr.p(cor_mat , nrow(cor_mat), adjust="fdr", alpha=.05)
 
-
+cor_mat2 <- cor_mat
 printSig <- function(x=0.6) {
+  library(tibble)
+  library(dplyr)
   if(x>0){
     sig <- cor_mat2[cor_mat2>x,]
     tbl <- rev(sort(sig)) %>% as.data.frame() %>%  rownames_to_column('entrez') %>% tbl_df 

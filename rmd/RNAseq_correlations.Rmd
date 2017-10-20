@@ -1,0 +1,218 @@
+---
+title: "Interaction networks with significance testing"
+author: "Przemyslaw Aleksander Stempor"
+date: '`r format(Sys.time(), "%d %B %Y")`'
+output:
+  html_notebook:
+    code_folding: hide
+    fig_caption: yes
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+  html_document:
+    code_folding: hide
+    df_print: paged
+    fig_height: 10
+    fig_retina: 1
+    fig_width: 10
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+  pdf_document: default
+---
+
+```{r}
+suppressMessages(suppressWarnings({
+  library(magrittr, quietly = TRUE)
+  library(tibble, quietly = TRUE)
+  library(dplyr, quietly = TRUE)
+  #library(Matrix, quietly = TRUE)
+  #library(qgraph, quietly = TRUE)
+  #library(psych, quietly = TRUE)
+  #library(corpcor, quietly = TRUE)
+  #library(corrplot, quietly = TRUE)
+  library(knitr, quietly = TRUE)
+}))
+source('plotting_functions.R')
+source('../get_cor_genes.R')
+opts_chunk$set(
+  dev = c("png", "pdf"), 
+  dpi = 150
+  #,
+  #fig.width = 8/2.54, fig.height = 8/2.54
+)
+
+```
+
+
+<style>
+  table.corrtable td:nth-child(1){
+      font-weight: bold;
+  }
+  body {
+    max-width: 100%;
+    margin: auto;
+    padding: 1em;
+    line-height: 20px ; 
+  } 
+  div.main-container {
+    max-width: 100%;
+  }
+</style>
+
+
+# Get data 
+
+```{r}
+require(SummarizedExperiment)
+require(magrittr)
+#
+
+#
+
+
+# Join Rdata files to singe SummarizedExperiment class
+#setwd('/Users/nataliabulgakova/Documents/R/RNAseq')
+dir('../data', full.names = TRUE, pattern = 'Rdata') %>% sapply(function(x) get(load(x)) ) -> SE_list
+SE <- do.call(cbind, SE_list)
+colnames(SE) <- gsub('(SRR[0-9]+)\\.bam', '\\1', colnames(SE))
+```
+
+
+# Hi correlations with given gene {.tabset .tabset-fade .tabset-pills}
+
+
+```{r, message=FALSE, warning=FALSE}
+library(org.Hs.eg.db)
+require(DESeq2)
+
+sig <- getHiCor(SE, SYMBOL='CDH1', rpkm='TRUE', cor_cutoff=0.7, anticor_cutoff=-0.6)
+sig
+
+```
+
+
+# Correlations {.tabset .tabset-fade .tabset-pills}
+
+
+```{r}
+library(psych, quietly = TRUE)
+
+M <- t(fpkm(DESeqDataSet(SE, ~1), robust = TRUE)[sig$entrez,])
+
+R <- cor(M)
+rownames(R) <- sig$SYMBOL
+colnames(R) <- sig$SYMBOL
+
+P  <- corr.p(R, nrow(assay(SE)), adjust="fdr")$p
+
+if(!all( R[lower.tri(R)] == t(R)[lower.tri(R)] )) stop('Matrix R is not symetric!')
+P[lower.tri(P)] <- t(P)[lower.tri(P)]
+
+
+```
+
+## Plot
+
+```{r, fig.height=7, fig.width=6}
+library(corrplot, quietly = TRUE)
+
+corrplot(
+  R, order = "AOE", type = 'lower', diag=T, 
+  method = 'number', tl.pos = 'lt', p.mat=P, sig.level=0.05
+)
+corrplot(
+  R, order = "AOE", type = 'upper',diag=F, 
+  add = TRUE, method = 'circle', tl.pos = 'n', p.mat=P, insig = "p-value", sig.level=0.05
+)
+```
+
+## Speraman correlation coeficiemnt
+```{r}
+knitr::kable(R, "html", table.attr = 'class="table table-condensed corrtable"', digits =2, padding = 1)
+```
+
+## Cor test p-val
+```{r}
+knitr::kable(P, "html", table.attr = 'class="table table-condensed corrtable"', digits =2, padding = 1)
+```
+
+
+
+# Speraman correlation network - spring layout {.tabset .tabset-fade .tabset-pills}
+
+## Significant correlations
+```{r, warning=FALSE}
+library(qgraph, quietly = TRUE)
+  r <- R
+  r[P > 0.05] <- NA 
+  diag(r) <- NA
+  z <- qgraph(r, layout = "spring", title = 'Speraman correlation network - significant correlations', DoNotPlot=TRUE, directed=FALSE, bidirectional=TRUE)
+  z$graphAttributes$Nodes$labels <- names(z$graphAttributes$Nodes$labels)
+  plot(z)
+```
+
+## All correlations
+```{r}
+
+  z <- qgraph(R, layout = "spring", title = 'Speraman correlation network - all correlations', DoNotPlot=TRUE, directed=FALSE, bidirectional=TRUE)
+  z$graphAttributes$Nodes$labels <- names(z$graphAttributes$Nodes$labels)
+  plot(z)
+```
+
+
+
+# Speraman correlation network - circle layout {.tabset .tabset-fade .tabset-pills}
+
+## Significant correlations
+```{r, warning=FALSE}
+  z <- qgraph(r, layout = "circle", title = 'Speraman correlation network - significant correlations', DoNotPlot=TRUE, directed=FALSE, bidirectional=TRUE)
+  z$graphAttributes$Nodes$labels <- names(z$graphAttributes$Nodes$labels)
+  plot(z)
+```
+
+## All correlations
+```{r}
+  z <- qgraph(R, layout = "circle", title = 'Speraman correlation network - all correlations', DoNotPlot=TRUE, directed=FALSE, bidirectional=TRUE)
+  z$graphAttributes$Nodes$labels <- names(z$graphAttributes$Nodes$labels)
+  plot(z)
+```
+
+
+
+# Speraman correlation network - with LASSO {.tabset .tabset-fade .tabset-pills}
+
+```{r, warning=FALSE}
+
+  #Needed only if cor(M) is no PD
+  #colnames(M) <- sig$SYMBOL
+  #MM <- collapsemaxcor(M, method = 'pearson')
+  #while(!attr(MM, 'PD')) {
+  #  MM <- collapsemaxcor(MM, method = 'pearson')
+  #}
+
+  
+```
+
+## Significant correlations
+```{r, warning=FALSE}
+  r <- cor(M)
+  p <- corr.p(r, 20000, adjust = 'none')
+
+  r[p$p > 0.05] <- 0 #
+  EBICgraph <- EBICglasso(r, 20000, 0.5)
+  z <- qgraph(EBICgraph, layout = "spring", title = 'Speraman correlation network - significant correlations', DoNotPlot=TRUE, directed=FALSE, bidirectional=TRUE)
+  z$graphAttributes$Nodes$labels <- names(z$graphAttributes$Nodes$labels)
+  plot(z)
+```
+
+## All correlations
+```{r}
+  r <- cor(M)
+  EBICgraph <- EBICglasso(r, 20000, 0.5)
+  z <- qgraph(EBICgraph, layout = "spring", title = 'Speraman correlation network - all correlations', DoNotPlot=TRUE, directed=FALSE, bidirectional=TRUE)
+  z$graphAttributes$Nodes$labels <- names(z$graphAttributes$Nodes$labels)
+  plot(z)
+```
+
+

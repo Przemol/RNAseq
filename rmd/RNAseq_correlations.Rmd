@@ -99,12 +99,10 @@ sig
 library(psych, quietly = TRUE)
 
 M <- t(fpkm(DESeqDataSet(SE, ~1), robust = TRUE)[sig$entrez,])
+colnames(M) <- sig$SYMBOL
 
 R <- cor(M)
-rownames(R) <- sig$SYMBOL
-colnames(R) <- sig$SYMBOL
-
-P  <- corr.p(R, nrow(assay(SE)), adjust="fdr")$p
+P  <- corr.p(R, ncol(M), adjust="fdr")$p
 
 if(!all( R[lower.tri(R)] == t(R)[lower.tri(R)] )) stop('Matrix R is not symetric!')
 P[lower.tri(P)] <- t(P)[lower.tri(P)]
@@ -184,23 +182,37 @@ library(qgraph, quietly = TRUE)
 
 ```{r, warning=FALSE}
 
-  #Needed only if cor(M) is no PD
-  #colnames(M) <- sig$SYMBOL
-  #MM <- collapsemaxcor(M, method = 'pearson')
-  #while(!attr(MM, 'PD')) {
-  #  MM <- collapsemaxcor(MM, method = 'pearson')
-  #}
+if(matrixcalc::is.positive.definite(R)) {
+  r <- R
+  p <- P
+} else {
+    #Needed only if cor(M) is no PD
+  colnames(M) <- sig$SYMBOL
+  MM <- collapsemaxcor(M, method = 'pearson')
+  while(!attr(MM, 'PD')) {
+    MM <- collapsemaxcor(MM, method = 'pearson')
+  }
+  
+  r <- cor(M)
+  p <- corr.p(r, 20000, adjust = 'none')$p
+}
+
 
   
 ```
 
 ## Significant correlations
 ```{r, warning=FALSE}
-  r <- cor(M)
-  p <- corr.p(r, 20000, adjust = 'none')
 
-  r[p$p > 0.05] <- 0 #
-  EBICgraph <- EBICglasso(r, 20000, 0.5)
+
+  r[p > 0.05] <- 0
+ 
+  
+  if(matrixcalc::is.positive.definite(R)) {
+    r <- as.matrix(nearPD(r)$mat)
+  }
+ EBICgraph <- EBICglasso(r, 20000, 0.5)
+  
   z <- qgraph(EBICgraph, layout = "spring", title = 'Speraman correlation network - significant correlations', DoNotPlot=TRUE, directed=FALSE, bidirectional=TRUE)
   z$graphAttributes$Nodes$labels <- names(z$graphAttributes$Nodes$labels)
   plot(z)

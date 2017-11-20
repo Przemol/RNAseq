@@ -226,7 +226,8 @@ image(x=seq(-1000, 1000, length.out=20),
       xlab='Distance from TSS (bp)',
       ylab='Promoters', lwd=2)
 box(col='black', lwd=2)
-abline(v=0, lwd=1, col='gray')
+abline(v=0, lwd=1, col='black')
+abline(h=which(rownames(data1) == "FBgn0003391"), lwd=1, col='black')
 
 plot(x=seq(-1000, 1000, length.out=20),
      y=colMeans(HPpreTSS),
@@ -237,12 +238,91 @@ plot(x=seq(-1000, 1000, length.out=20),
 abline(h=seq(1,100,by=5),
        v=seq(-1000, 1000, length.out=20),
        lwd=0.25, col='gray')
+abline(v=0, lwd=1, col='black')
 box(col='black', lwd=2)
 
-# seqrch genes by go
+# search genes by go
 pre_genes <- go.table[go.table$ID %in% genespreTSS,]
-selected_pre_genes <- pre_genes[grepl("cell cycle", pre_genes$GOTERM_BP_DIRECT)
-                                | grepl("cell cycle", pre_genes$GOTERM_MF_DIRECT),]
+selected_pre_genes <- pre_genes[grepl("signaling", pre_genes$GOTERM_BP_DIRECT)
+                                | grepl("signaling", pre_genes$GOTERM_MF_DIRECT),]
 selected_pre_genes <- egs[egs$ensembl_gene_id %in% selected_pre_genes$ID,] <- egs[egs$ensembl_gene_id %in% selected_pre_genes$ID,]
 selected_pre_genes <- selected_pre_genes[!duplicated(selected_pre_genes$ensembl_gene_id),]
 View(selected_pre_genes)
+
+# overlap with similarly expressed genes
+similar_genes <- read.csv('FlyBase_IDs.csv')
+ovlp <- Reduce(intersect, list(similar_genes$ID,pre_genes$ID))
+ovlp_genes <- egs[egs$ensembl_gene_id %in% ovlp,] <- egs[egs$ensembl_gene_id %in% ovlp,]
+ovlp_genes <- ovlp_genes[!duplicated(ovlp_genes$ensembl_gene_id),]
+View(ovlp_genes)
+
+# clustering
+fit <- kmeans(HPpreTSS, 2) # 5 cluster solution
+# get cluster means 
+aggregate(HPpreTSS,by=list(fit$cluster),FUN=mean)
+# append cluster assignment
+mydata <- data.frame(HPpreTSS, fit$cluster)
+mydata <- mydata[order(mydata[,21], rowSums(mydata)),]
+data1 <- mydata[mydata[,21]==1,]
+data2 <- mydata[mydata[,21]==2,]
+
+write.csv(data1, 'subset1.csv')
+write.csv(data2, 'subset2.csv')
+
+mydata <- mydata[,1:20]
+
+colors <- colorRampPalette(c('white','red','gray','black'))(100)
+layout(mat=matrix(c(1,2,0,3), 2, 2),
+       widths=c(2,2,2),
+       heights=c(0.5,5,0.5,5), TRUE)
+par(mar=c(2.5,1,1.5,1))
+image(seq(0, max(mydata), length.out=100), 1,
+      matrix(seq(0, max(mydata), length.out=100),100,1),
+      col = colors,
+      xlab='Distance from TSS', ylab='',
+      main='Number of reads', yaxt='n',
+      lwd=3, axes=TRUE)
+box(col='black', lwd=2)
+image(x=seq(-1000, 1000, length.out=20),
+      y=1:nrow(mydata),
+      z=t(mydata),
+      col=colors,
+      xlab='Distance from TSS (bp)',
+      ylab='Promoters', lwd=2)
+box(col='black', lwd=2)
+abline(v=0, lwd=1, col='gray')
+
+
+colors <- colorRampPalette(c('white','red','gray','black'))(100)
+layout(mat=matrix(c(1,2,0,3), 2, 2),
+       widths=c(2,2,2),
+       heights=c(0.5,5,0.5,5), TRUE)
+par(mar=c(2.5,1,1.5,1))
+image(seq(0, max(data1[,1:20]), length.out=100), 1,
+      matrix(seq(0, max(data1[,1:20]), length.out=100),100,1),
+      col = colors,
+      xlab='Distance from TSS', ylab='',
+      main='Number of reads', yaxt='n',
+      lwd=3, axes=TRUE)
+box(col='black', lwd=2)
+image(x=seq(-1000, 1000, length.out=20),
+      y=1:nrow(data1[,1:20]),
+      z=t(data1[,1:20]),
+      col=colors,
+      xlab='Distance from TSS (bp)',
+      ylab='Promoters', lwd=2)
+box(col='black', lwd=2)
+abline(v=0, lwd=1, col='black')
+abline(h=which(rownames(data1) == "FBgn0003391"), lwd=1, col='black')
+
+plot(x=seq(-1000, 1000, length.out=20),
+     y=colMeans(data1[,1:20]),
+     ty='b', pch=19,
+     col='red4',lwd=2,
+     ylab='Mean tag count',
+     xlab='Distance from TSS (bp)')
+abline(h=seq(1,100,by=5),
+       v=seq(-1000, 1000, length.out=20),
+       lwd=0.25, col='gray')
+abline(v=0, lwd=1, col='black')
+box(col='black', lwd=2)

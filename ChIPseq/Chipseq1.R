@@ -87,9 +87,10 @@ write.table(x = genes_df, 'genes0-200.csv', sep=",", col.names=TRUE)
 # Gene selection by function and plotting
 go.table <- read.csv('go_table.csv')
 
-selected_genes <- go.table[grepl("cell cycle", go.table$GOTERM_BP_DIRECT) | grepl("cell cycle", go.table$GOTERM_MF_DIRECT),]
+selected_genes <- go.table
 selected_genes <- egs[egs$ensembl_gene_id %in% selected_genes$ID,] <- egs[egs$ensembl_gene_id %in% selected_genes$ID,]
 selected_genes <- selected_genes[!duplicated(selected_genes$ensembl_gene_id),]
+
 
 selected_genes$TSS <- ifelse( selected_genes$strand == "1", selected_genes$start_position, selected_genes$end_position )
 
@@ -165,11 +166,12 @@ abline(h=seq(1,100,by=5),
 box(col='black', lwd=2)
 
 # Pre vs after TSS enrichment
-HPafterTTS <- HP1.p.matrix[rowSums(HP1.p.matrix[,1:10])<rowSums(HP1.p.matrix[,11:20]),]
-genesafterTTS <- rownames(HPafterTTS)
-write.csv(genesafterTTS, file = 'genes_with_HP_after_TSS.csv')
-HPpreTTS <- HP1.p.matrix[rowSums(HP1.p.matrix[,1:10])>rowSums(HP1.p.matrix[,11:20]),]
-genespreTTS <- rownames(HPpreTTS)
+HPafterTSS <- HP1.p.matrix[rowSums(HP1.p.matrix[,1:10])<rowSums(HP1.p.matrix[,11:20]),]
+genesafterTSS <- rownames(HPafterTTS)
+write.csv(genesafterTSS, file = 'genes_with_HP_after_TSS.csv')
+HPpreTSS <- HP1.p.matrix[rowSums(HP1.p.matrix[,1:10])>rowSums(HP1.p.matrix[,11:20]),]
+genespreTSS <- rownames(HPpreTTS)
+write.csv(genespreTSS, file = 'genes_with_HP_pre_TSS.csv')
 
 # Graph 2
 colors <- colorRampPalette(c('white','red','gray','black'))(100)
@@ -177,16 +179,16 @@ layout(mat=matrix(c(1,2,0,3), 2, 2),
        widths=c(2,2,2),
        heights=c(0.5,5,0.5,5), TRUE)
 par(mar=c(2.5,1,1.5,1))
-image(seq(0, max(HPafterTTS), length.out=100), 1,
-      matrix(seq(0, max(HPafterTTS), length.out=100),100,1),
+image(seq(0, max(HPafterTSS), length.out=100), 1,
+      matrix(seq(0, max(HPafterTSS), length.out=100),100,1),
       col = colors,
       xlab='Distance from TSS', ylab='',
       main='Number of reads', yaxt='n',
       lwd=3, axes=TRUE)
 box(col='black', lwd=2)
 image(x=seq(-1000, 1000, length.out=20),
-      y=1:nrow(HPafterTTS),
-      z=t(HPafterTTS[order(rowSums(HPafterTTS)),]),
+      y=1:nrow(HPafterTSS),
+      z=t(HPafterTSS[order(rowSums(HPafterTSS)),]),
       col=colors,
       xlab='Distance from TSS (bp)',
       ylab='Promoters', lwd=2)
@@ -194,7 +196,7 @@ box(col='black', lwd=2)
 abline(v=0, lwd=1, col='gray')
 
 plot(x=seq(-1000, 1000, length.out=20),
-     y=colMeans(HPafterTTS),
+     y=colMeans(HPafterTSS),
      ty='b', pch=19,
      col='red4',lwd=2,
      ylab='Mean tag count',
@@ -210,16 +212,16 @@ layout(mat=matrix(c(1,2,0,3), 2, 2),
        widths=c(2,2,2),
        heights=c(0.5,5,0.5,5), TRUE)
 par(mar=c(2.5,1,1.5,1))
-image(seq(0, max(HPpreTTS), length.out=100), 1,
-      matrix(seq(0, max(HPpreTTS), length.out=100),100,1),
+image(seq(0, max(HPpreTSS), length.out=100), 1,
+      matrix(seq(0, max(HPpreTSS), length.out=100),100,1),
       col = colors,
       xlab='Distance from TSS', ylab='',
       main='Number of reads', yaxt='n',
       lwd=3, axes=TRUE)
 box(col='black', lwd=2)
 image(x=seq(-1000, 1000, length.out=20),
-      y=1:nrow(HPpreTTS),
-      z=t(HPpreTTS[order(rowSums(HPpreTTS)),]),
+      y=1:nrow(HPpreTSS),
+      z=t(HPpreTSS[order(rowSums(HPpreTSS)),]),
       col=colors,
       xlab='Distance from TSS (bp)',
       ylab='Promoters', lwd=2)
@@ -227,7 +229,7 @@ box(col='black', lwd=2)
 abline(v=0, lwd=1, col='gray')
 
 plot(x=seq(-1000, 1000, length.out=20),
-     y=colMeans(HPpreTTS),
+     y=colMeans(HPpreTSS),
      ty='b', pch=19,
      col='red4',lwd=2,
      ylab='Mean tag count',
@@ -237,3 +239,10 @@ abline(h=seq(1,100,by=5),
        lwd=0.25, col='gray')
 box(col='black', lwd=2)
 
+# seqrch genes by go
+pre_genes <- go.table[go.table$ID %in% genespreTSS,]
+selected_pre_genes <- pre_genes[grepl("cell cycle", pre_genes$GOTERM_BP_DIRECT)
+                                | grepl("cell cycle", pre_genes$GOTERM_MF_DIRECT),]
+selected_pre_genes <- egs[egs$ensembl_gene_id %in% selected_pre_genes$ID,] <- egs[egs$ensembl_gene_id %in% selected_pre_genes$ID,]
+selected_pre_genes <- selected_pre_genes[!duplicated(selected_pre_genes$ensembl_gene_id),]
+View(selected_pre_genes)

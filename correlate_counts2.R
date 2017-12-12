@@ -2,10 +2,10 @@ require(SummarizedExperiment)
 require(DESeq2)
 require(magrittr)
 library(org.Hs.eg.db)
-
+library(edgeR)
 
 # Join Rdata files to singe SummarizedExperiment class
-#setwd('/Users/nataliabulgakova/Documents/R/RNAseq')
+setwd('/Users/nataliabulgakova/Documents/R/RNAseq')
 dir('data', full.names = TRUE, pattern = 'Rdata') %>% sapply(function(x) get(load(x)) ) -> SE_list
 SE <- do.call(cbind, SE_list)
 colnames(SE) <- gsub('(SRR[0-9]+)\\.bam', '\\1', colnames(SE))
@@ -13,7 +13,7 @@ colnames(SE) <- gsub('(SRR[0-9]+)\\.bam', '\\1', colnames(SE))
 # Extract count matrix
 raw_counts <- assay(SE)
 
-# Correalte
+# Correlate
 raw_counts <- raw_counts[!zeros, ] 
 raw_counts_cad <- raw_counts["999",]
 cor_mat <- cor(t(raw_counts),raw_counts_cad, use='pairwise.complete.obs')
@@ -48,11 +48,6 @@ colnames(counts) <- gsub('data/(SRR[0-9]+)\\.Rdata', '\\1', colnames(counts))
 
 ###
 load('cor_mat_rpkm_1.Rdata')
->
-  >
-  > library(psych)
-
-> cor_pvl <- corr.p(cor_mat , nrow(cor_mat), adjust="fdr", alpha=.05)
 
 cor_mat2 <- cor_mat
 printSig <- function(x=0.6) {
@@ -87,8 +82,25 @@ sort() %>% names %>%
 sort(cor_mat2[cor_mat2>0.6,]) %>% names %>%  mapIds(org.Hs.eg.db, ., "SYMBOL", "ENTREZID") %>% rev() %>% View()
 
 
+# Correlate with STATs
+raw_counts_cad <- raw_counts["999",]
+cad <- t(t(raw_counts_cad))
+raw_counts_stat <- raw_counts[c("6772", "6773", "6774", "6775", "6776", "6777", "6778"),]
+statdata <- t(t(raw_counts_stat))
 
+cor_matCS <- cor(t(raw_counts_stat),raw_counts_cad, use='pairwise.complete.obs')
+cor_pvlCS <- corr.p(cor_matCS , nrow(cor_matCS), adjust="fdr", alpha=.05)
 
+# Remove low expressed genes
+myCPM <- cpm(raw_counts)
+thresh <- myCPM > 0.1
+keep <- rowSums(thresh) >= 2
+# plot(myCPM[,1],raw_counts[,1],ylim=c(0,50),xlim=c(0,3))
+# abline(h=10)
+counts.keep <- raw_counts[keep,]
 
-
-
+# Convert counts to DGEList object
+countsdata <- DGEList(counts.keep)
+countsdata <- calcNormFactors(countsdata)
+norm.counts <- counts.keep %*% diag(y$samples$norm.factors)
+norm_counts_stat <- t(norm.counts[c("6772", "6773", "6774", "6775", "6776", "6777", "6778"),])

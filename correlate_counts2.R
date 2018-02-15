@@ -91,6 +91,35 @@ statdata <- t(t(raw_counts_stat))
 cor_matCS <- cor(t(raw_counts_stat),raw_counts_cad, use='pairwise.complete.obs')
 cor_pvlCS <- corr.p(cor_matCS , nrow(cor_matCS), adjust="fdr", alpha=.05)
 
+# Correlate with HP1 peaks
+raw_counts_cad <- raw_counts["999",]
+cad <- t(t(raw_counts_cad))
+ortho <- read.csv(file="/Volumes/NGSDATA/sam/larvae/genes0-200orthologues2.csv", header=TRUE, sep=",")
+ortho <- as.character(na.omit(ortho$Human.GeneID))
+ortho <- unique(ortho)
+ortho <- intersect(ortho, rownames(raw_counts))
+
+raw_counts_ortho <- raw_counts[ortho,]
+orthodata <- t(t(raw_counts_ortho))
+
+cor_matortho <- cor(t(raw_counts_ortho),raw_counts_cad, use='pairwise.complete.obs')
+cor_pvlortho <- corr.p(cor_matortho , nrow(cor_matortho), adjust="fdr", alpha=.05)
+
+cor_matortho2 <- cor_matortho
+library(tibble)
+library(dplyr)
+tbl2 <- as.data.frame(cbind(rownames(cor_matortho2),cor_pvlortho$r,cor_pvlortho$p))
+colnames(tbl2) = c('entrez', 'cor','p-value')
+
+tbl2$SYMBOL <- mapIds(org.Hs.eg.db, as.character(tbl2$entrez), "SYMBOL", "ENTREZID")
+tbl2$GENENAME <- mapIds(org.Hs.eg.db, as.character(tbl2$entrez), "GENENAME", "ENTREZID")
+tbl2 <- tbl2[tbl2$'p-value'<0.01,]
+
+
+sort() %>% names %>%  
+  sort(cor_pvlortho) %>% names %>%  mapIds(org.Hs.eg.db, ., "SYMBOL", "ENTREZID") %>% rev() %>% View()
+
+
 # Remove low expressed genes
 myCPM <- cpm(raw_counts)
 thresh <- myCPM > 0.1
@@ -102,5 +131,5 @@ counts.keep <- raw_counts[keep,]
 # Convert counts to DGEList object
 countsdata <- DGEList(counts.keep)
 countsdata <- calcNormFactors(countsdata)
-norm.counts <- counts.keep %*% diag(y$samples$norm.factors)
+norm.counts <- counts.keep %*% diag(countsdata$samples$norm.factors)
 norm_counts_stat <- t(norm.counts[c("6772", "6773", "6774", "6775", "6776", "6777", "6778"),])

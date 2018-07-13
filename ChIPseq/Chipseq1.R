@@ -8,7 +8,7 @@ source("https://bioconductor.org/biocLite.R")
 biocLite("org.Dm.eg.db")
 biocLite("chipseq")
 biocLite("BayesPeak")
-setwd('/Volumes/NGSDATA/sam/larvae')
+setwd('/Volumes/NGSDATA/STAT_modEncode_4103/raw_data_files')
 
 # Load and tile genome
 
@@ -55,7 +55,7 @@ promoter_regions3 <-
 
 # Identification of peaks
 library(BayesPeak)
-raw.output3 <- bayespeak('3_HP1a_2265_filtered.bed', '3_Input_2228_filtered.bed')
+raw.output3 <- bayespeak('Rep1filtered.bed', 'Inputfiltered.bed')
 output3 <- summarize.peaks(raw.output3, threshold = 0.9)
 outdir3 <- file.path('/Volumes/NGSDATA/sam/larvae', "larva3.bed")
 export.bed(output3,outdir3)
